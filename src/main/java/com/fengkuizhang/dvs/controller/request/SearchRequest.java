@@ -9,7 +9,6 @@ public class SearchRequest {
 
     @NotEmpty
     private String type;
-    @NotEmpty
     private String q;
 
 }

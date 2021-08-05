@@ -6,6 +6,7 @@ import com.fengkuizhang.dvs.controller.request.AddUserRequest;
 import com.fengkuizhang.dvs.controller.request.LoginRequest;
 import com.fengkuizhang.dvs.controller.request.RegisterRequest;
 import com.fengkuizhang.dvs.dto.UserDto;
+import com.fengkuizhang.dvs.model.User;
 import com.fengkuizhang.dvs.service.UserService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
@@ -86,6 +88,17 @@ public class UserController extends BaseController {
         UserDto userDto = modelMapper.map(addUserRequest, UserDto.class);
         userService.addUser(userDto);
         return success();
+    }
+
+    @GetMapping("/dashboard")
+    public ResponseEntity dashboard(HttpServletRequest request){
+        User user = (User)request.getAttribute("loginUser");
+        user.setPassword("");
+        if(user!=null){
+            return success(user);
+        }else{
+            return fail(HttpStatus.NOT_FOUND, "no user found");
+        }
     }
 
 }

@@ -1,5 +1,8 @@
-package com.fengkuizhang.dvs;
+package com.fengkuizhang.dvs.config;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import org.modelmapper.ModelMapper;
@@ -18,6 +21,8 @@ public class DvsConfig {
     private String mongoUrl;
     @Value("${web.cors.domain}")
     private String corsDomain;
+    @Value("${jwt.secret}")
+    private String jwtSecret;
 
     @Bean
     public MongoClient mongoClient() {
@@ -46,4 +51,9 @@ public class DvsConfig {
         return new ModelMapper();
     }
 
+    @Bean
+    public JWTVerifier jwtVerifier(){
+        Algorithm algorithm = Algorithm.HMAC512(jwtSecret);
+        return JWT.require(algorithm).build();
+    }
 }
