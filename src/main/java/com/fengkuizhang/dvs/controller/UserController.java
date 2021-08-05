@@ -15,7 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
@@ -49,30 +48,12 @@ public class UserController extends BaseController {
         String userId = userService.validateUser(loginRequest.getEmail(), loginRequest.getPassword());
         if(userId!=null){
             long duration = TimeUnit.HOURS.toMillis(24);
-            int maxAge = (int) (duration / 1000);
             Algorithm algorithm = Algorithm.HMAC512(jwtSecret);
             String token = JWT.create()
                     .withClaim("userId", userId)
                     .withExpiresAt(new Date(System.currentTimeMillis() + duration))
                     .sign(algorithm);
-            Cookie cookie = new Cookie("dvs_token", token);
-            cookie.setPath("/");
-            cookie.setComment("SameSite=None");
-            cookie.setMaxAge(maxAge);
-//            cookie.setHttpOnly(true);
-            cookie.setSecure(true);
-            response.addCookie(cookie);
-            Collection<String> headers = response.getHeaders("Set-Cookie");
-            boolean firstHeader = true;
-            for (String header : headers) {
-                if (firstHeader) {
-                    response.setHeader("Set-Cookie", String.format("%s; %s", header, "SameSite=None"));
-                    firstHeader = false;
-                    continue;
-                }
-                response.addHeader("Set-Cookie", String.format("%s; %s", header, "SameSite=None"));
-            }
-            return success();
+            return success(token);
         }else{
             return fail(HttpStatus.UNAUTHORIZED, "login fail");
         }
@@ -80,10 +61,6 @@ public class UserController extends BaseController {
 
     @RequestMapping("/logout")
     public ResponseEntity logout(HttpServletResponse response){
-        Cookie cookie = new Cookie("dvs_token", "");
-//        cookie.setPath("/");
-        cookie.setMaxAge(0);
-        response.addCookie(cookie);
         return success();
     }
 
