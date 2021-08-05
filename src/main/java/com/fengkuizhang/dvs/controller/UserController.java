@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
+import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -33,6 +34,8 @@ public class UserController extends BaseController {
     private ModelMapper modelMapper;
     @Value("${jwt.secret}")
     private String jwtSecret;
+    @Value("${web.cors.domain}")
+    private String corsDomain;
 
     @PostMapping("/register")
     public ResponseEntity register(@RequestBody @Valid RegisterRequest registerRequest){
@@ -54,17 +57,28 @@ public class UserController extends BaseController {
                     .sign(algorithm);
             Cookie cookie = new Cookie("dvs_token", token);
             cookie.setPath("/");
-//            cookie.setDomain("");
+            cookie.setComment("SameSite=None");
             cookie.setMaxAge(maxAge);
 //            cookie.setHttpOnly(true);
+            cookie.setSecure(true);
             response.addCookie(cookie);
+            Collection<String> headers = response.getHeaders("Set-Cookie");
+            boolean firstHeader = true;
+            for (String header : headers) {
+                if (firstHeader) {
+                    response.setHeader("Set-Cookie", String.format("%s; %s", header, "SameSite=None"));
+                    firstHeader = false;
+                    continue;
+                }
+                response.addHeader("Set-Cookie", String.format("%s; %s", header, "SameSite=None"));
+            }
             return success();
         }else{
             return fail(HttpStatus.UNAUTHORIZED, "login fail");
         }
     }
 
-    @RequestMapping("/login")
+    @RequestMapping("/logout")
     public ResponseEntity logout(HttpServletResponse response){
         Cookie cookie = new Cookie("dvs_token", "");
 //        cookie.setPath("/");
